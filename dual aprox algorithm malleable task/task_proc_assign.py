@@ -24,7 +24,12 @@ def assign_plane_pos(m, tau_0, tau_1, tau_2, tau_s):
     proc_time = {i : 0 for i in range(m)}
     first_proc, tau_0, proc_time = _consecutive_processor_assign(first_proc, tau_0, proc_time)
     _, tau_1, proc_time = _consecutive_processor_assign(first_proc, tau_1, proc_time)
+    # For the 3/2-approximation it is not necessary to order decreasingly tau_0, but it works better like this
+    tau_s = sorted(tau_s, key=lambda task: task["time"], reverse=True)
     for task in tau_s:
         task, proc_time = _assign_to_less_load(task, proc_time)
         task["num_proc"] = 1
+    # For the 3/2-approximation it is not necessary to order decreasingly tau_2, but it works better like this
+    tau_2 = sorted(tau_2, key=lambda task: task["time"], reverse=True)
+    
     return tau_0, tau_1, tau_2, tau_s

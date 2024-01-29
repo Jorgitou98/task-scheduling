@@ -32,6 +32,30 @@ def _refinement_rules(tau1, tau2, m, d, times):
     while some_rule_exec:
         some_rule_exec = False
 
+        # Rule 3
+        procs_per_stack_tau1 = map(lambda task_stack: max(map(itemgetter("num_proc"), task_stack)), tau1)
+        idle_proc_tau1 = m - sum(procs_per_stack_tau1)
+        if idle_proc_tau1 == 0:
+            continue
+        tasks_to_idles = [task for task_stack in tau2 for task in task_stack if times[task["task_i"]][idle_proc_tau1-1] <= 3*d/2]
+        if tasks_to_idles == []:
+            continue
+        some_rule_exec = True
+        task_to_idles = tasks_to_idles[0]
+        # Remove moved task from tau2
+        tau2 = [[task for task in task_stack if task["task_i"] != task_to_idles["task_i"]] for task_stack in tau2]
+        # Removed empty list (processors without any task)
+        tau2 = [task_stack for task_stack in tau2 if task_stack != []]
+        min_proc_time = lambda task_t, limit: next((i + 1 for i, time in enumerate(task_t) if time <= limit), float("inf"))
+        task_proc_3d2 = min_proc_time(times[task_to_idles["task_i"]], 3*d/2)
+        
+        task_to_idles["num_proc"] = task_proc_3d2
+        task_to_idles["time"] = times[task_to_idles["task_i"]][task_proc_3d2 - 1]
+        if task_to_idles["time"] >= d:
+            tau0.append([task_to_idles])
+        else:
+            tau1.append([task_to_idles])
+
         # Rule 1
         task_to_tau0 = [task for task_stack in tau1 for task in task_stack if task["time"] < 3/4*d and task["num_proc"] > 1]
         # Removed moved task from tau1
@@ -66,29 +90,7 @@ def _refinement_rules(tau1, tau2, m, d, times):
             for i in range(n_stack_task_pairs):
                 tau0.append([task_stackable_to_tau0[2*i], task_stackable_to_tau0[2*i+1]])
         
-        # Rule 3
-        procs_per_stack_tau1 = map(lambda task_stack: max(map(itemgetter("num_proc"), task_stack)), tau1)
-        idle_proc_tau1 = m - sum(procs_per_stack_tau1)
-        if idle_proc_tau1 == 0:
-            continue
-        tasks_to_idles = [task for task_stack in tau2 for task in task_stack if times[task["task_i"]][idle_proc_tau1-1] <= 3*d/2]
-        if tasks_to_idles == []:
-            continue
-        some_rule_exec = True
-        task_to_idles = tasks_to_idles[0]
-        # Remove moved task from tau2
-        tau2 = [[task for task in task_stack if task["task_i"] != task_to_idles["task_i"]] for task_stack in tau2]
-        # Removed empty list (processors without any task)
-        tau2 = [task_stack for task_stack in tau2 if task_stack != []]
-        min_proc_time = lambda task_t, limit: next((i + 1 for i, time in enumerate(task_t) if time <= limit), float("inf"))
-        task_proc_3d2 = min_proc_time(times[task_to_idles["task_i"]], 3*d/2)
-        
-        task_to_idles["num_proc"] = task_proc_3d2
-        task_to_idles["time"] = times[task_to_idles["task_i"]][task_proc_3d2 - 1]
-        if task_to_idles["time"] >= d:
-            tau0.append([task_to_idles])
-        else:
-            tau1.append([task_to_idles])
+
     
     return tau0, tau1, tau2
 
