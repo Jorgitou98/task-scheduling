@@ -27,11 +27,12 @@ def draw_shelve_stacked_rects(d, m, tau_0, tau_1, tau_2, tau_s):
     actual_yticks_labels[-2] = f"d={d:.2f}"
     actual_yticks_labels[-1] = f"3d/2={3*d/2:.2f}"
     ax.set_yticklabels(actual_yticks_labels)
-
     
     _draw_rects_set(ax = ax, task_set = chain(*tau_0), color = "pink")
     _draw_rects_set(ax = ax, task_set = chain(*tau_1), color = "lightblue")
     _draw_rects_set(ax = ax, task_set = tau_s, color = "orange")
+    _draw_rects_set(ax = ax, task_set = tau_2, color = "yellow")
+
     legend_elems = [patches.Patch(linewidth = 1, facecolor = "pink", edgecolor = 'black', label='S_0'),
                     patches.Patch(linewidth = 1, facecolor = "lightblue", edgecolor = 'black', label='S_1'),
                     patches.Patch(linewidth = 1, facecolor = "yellow", edgecolor = 'black', label='S_2'),

@@ -1,3 +1,4 @@
+import heapq
 
 def _consecutive_processor_assign(first_proc, task_set, proc_time):
     for stacked_task in task_set:
@@ -18,18 +19,50 @@ def _assign_to_less_load(task, proc_time):
     proc_time[proc_less_load] += task["time"]
     return task, proc_time
 
+def _max_sliding_window(dic, k):
+	ans = []
+	heap = []
+      
+	for i in range(k):
+		heapq.heappush(heap, (-dic[i], i))
+
+	# The maximum element in the first window
+	ans.append(-heap[0][0])
+	# Process the remaining elements
+	for i in range(k, len(dic)):
+		heapq.heappush(heap, (-dic[i], i))
+		# Remove elements that are outside the current window
+		while heap[0][1] <= i - k:
+			heapq.heappop(heap)
+		# The maximum element in the current window
+		ans.append(-heap[0][0])
+	return ans
+
+
+def _assign_to_less_load_window(task, proc_time):
+    win_max_times = _max_sliding_window(proc_time, task["num_proc"])
+    first_proc_less_load = win_max_times.index(min(win_max_times))
+    task["x"] = first_proc_less_load
+    task["y"] = proc_time[first_proc_less_load]
+    for proc in range(first_proc_less_load, first_proc_less_load + task["num_proc"]):
+        proc_time[proc] += task["time"]
+    return task, proc_time
 
 def assign_plane_pos(m, tau_0, tau_1, tau_2, tau_s):
     first_proc = 0
     proc_time = {i : 0 for i in range(m)}
+    # Assign tau_0
     first_proc, tau_0, proc_time = _consecutive_processor_assign(first_proc, tau_0, proc_time)
+    # Assign tau_1
     _, tau_1, proc_time = _consecutive_processor_assign(first_proc, tau_1, proc_time)
-    # For the 3/2-approximation it is not necessary to order decreasingly tau_0, but it works better like this
+    # Assign tau_s: For the 3/2-approximation it is not necessary to order decreasingly, but it works better like this
     tau_s = sorted(tau_s, key=lambda task: task["time"], reverse=True)
     for task in tau_s:
         task, proc_time = _assign_to_less_load(task, proc_time)
         task["num_proc"] = 1
-    # For the 3/2-approximation it is not necessary to order decreasingly tau_2, but it works better like this
+    # Assign tau_2: For the 3/2-approximation it is not necessary to order decreasingly, but it works better like this
     tau_2 = sorted(tau_2, key=lambda task: task["time"], reverse=True)
-    
+    for task in tau_2:
+        task, proc_time = _assign_to_less_load_window(task, proc_time)
+
     return tau_0, tau_1, tau_2, tau_s

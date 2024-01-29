@@ -37,15 +37,13 @@ def _refinement_rules(tau1, tau2, m, d, times):
         idle_proc_tau1 = m - sum(procs_per_stack_tau1)
         if idle_proc_tau1 == 0:
             continue
-        tasks_to_idles = [task for task_stack in tau2 for task in task_stack if times[task["task_i"]][idle_proc_tau1-1] <= 3*d/2]
+        tasks_to_idles = [task for task in tau2 if times[task["task_i"]][idle_proc_tau1-1] <= 3*d/2]
         if tasks_to_idles == []:
             continue
         some_rule_exec = True
         task_to_idles = tasks_to_idles[0]
         # Remove moved task from tau2
-        tau2 = [[task for task in task_stack if task["task_i"] != task_to_idles["task_i"]] for task_stack in tau2]
-        # Removed empty list (processors without any task)
-        tau2 = [task_stack for task_stack in tau2 if task_stack != []]
+        tau2 = [task for task in tau2 if task["task_i"] != task_to_idles["task_i"]]
         min_proc_time = lambda task_t, limit: next((i + 1 for i, time in enumerate(task_t) if time <= limit), float("inf"))
         task_proc_3d2 = min_proc_time(times[task_to_idles["task_i"]], 3*d/2)
         
@@ -166,7 +164,7 @@ def _packing(times, d, m):
         return False, None
     # Match each task with the #processors and time used, according to its allocation (in tau_1 or in tau_2).
     tau_1 = [[{"task_i": index, "num_proc": task_weights_d[index], "time": times[index][task_weights_d[index] - 1]}] for index in tau_1]
-    tau_2= [[{"task_i": index, "num_proc": task_weights_d2[index], "time": times[index][task_weights_d2[index] - 1]}] for index in tau_2]
+    tau_2= [{"task_i": index, "num_proc": task_weights_d2[index], "time": times[index][task_weights_d2[index] - 1]} for index in tau_2]
     tau_0, tau_1, tau_2 = _refinement_rules(tau1 = tau_1, tau2 = tau_2, m = m, d = d, times = times)
     return True, (tau_0, tau_1, tau_2, tau_s)
     
