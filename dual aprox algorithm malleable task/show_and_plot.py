@@ -12,20 +12,24 @@ def _draw_rects_set(ax, task_set, color):
 
     
 
-def draw_shelve_stacked_rects(d, m, tau_0, tau_1, tau_2, tau_s):
+def draw_shelve_stacked_rects(real_makespan, d, m, tau_0, tau_1, tau_2, tau_s):
+    print("d*:", d, "real makespan:", real_makespan, "ratio aprox:", real_makespan / d) 
     _, ax = plt.subplots()
     # Configurar límites del eje
     ax.set_xlim(-2, m+1)
     ax.set_ylim(0, 3*d/2 + 20)
     plt.axhline(y=d, color='black', alpha=0.7)
     plt.axhline(y=3*d/2, color='black', alpha=0.7)
+    plt.axhline(y=real_makespan, color='red', alpha=0.7)
     actual_yticks = ax.get_yticks().tolist()
     actual_yticks.append(d)
     actual_yticks.append(3*d/2)
+    actual_yticks.append(real_makespan)
     ax.set_yticks(actual_yticks)
     actual_yticks_labels = [label.get_text() for label in ax.get_yticklabels()]
-    actual_yticks_labels[-2] = f"d={d:.2f}"
-    actual_yticks_labels[-1] = f"3d/2={3*d/2:.2f}"
+    actual_yticks_labels[-3] = "d"
+    actual_yticks_labels[-2] = "3d/2"
+    actual_yticks_labels[-1] = "makespan"
     ax.set_yticklabels(actual_yticks_labels)
     
     _draw_rects_set(ax = ax, task_set = chain(*tau_0), color = "pink")

@@ -7,8 +7,8 @@ def main():
     n, m, epsilon, times = get_inputs()
     # Call to the algorithm with problem inputs
     best_makespan, (tau_0, tau_1, tau_2, tau_s) = dual_schedule(m = m, epsilon = epsilon, times = times)
-    tau_0, tau_1, tau_2, tau_s = assign_plane_pos(m, tau_0, tau_1, tau_2, tau_s)
-    draw_shelve_stacked_rects(d = best_makespan, m = m, tau_0 = tau_0, tau_1 = tau_1, tau_2 = tau_2, tau_s = tau_s)
+    real_makespan, (tau_0, tau_1, tau_2, tau_s) = assign_plane_pos(m, tau_0, tau_1, tau_2, tau_s)   
+    draw_shelve_stacked_rects(real_makespan = real_makespan, d = best_makespan, m = m, tau_0 = tau_0, tau_1 = tau_1, tau_2 = tau_2, tau_s = tau_s)
 
 if __name__ == "__main__":
     main()
