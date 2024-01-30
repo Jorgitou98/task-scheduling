@@ -54,22 +54,21 @@ def _refinement_rules(tau1, tau2, m, d, times):
         else:
             tau1.append(task_to_idles)
         
-        # Rule 2
-        task_stackable_to_tau0 = [task for task in tau1 if task["time"] < 3/4*d and task["num_proc"] == 1]
-        n_task_stackable = len(task_stackable_to_tau0)
-        if n_task_stackable == 1:
+        # Rule 2 (modified to pair the longent with the shortest tasks)
+        tasks_stackable_to_tau0 = [task for task in tau1 if task["time"] < 3/4*d and task["num_proc"] == 1]
+        n_task_stackable = len(tasks_stackable_to_tau0)
+        if n_task_stackable <= 1:
             continue
+        some_rule_exec = True
         # Removed moved task from tau1
         tau1 = [task for task in tau1 if task["time"] >= 3/4*d or task["num_proc"] > 1]
-        print("rule 2")
-        some_rule_exec = True
-        n_stack_task_pairs = n_task_stackable // 2
-        # If there is a task without pair, it would be in tau1 for the next iteration
-        if n_task_stackable % 2 == 1:
-            tau1.append(task_stackable_to_tau0[-1])
-        # Putting rest of stackable task in tau0
-        for i in range(n_stack_task_pairs):
-            tau0.append([task_stackable_to_tau0[2*i], task_stackable_to_tau0[2*i+1]])
+        # Increasign sort by time
+        tasks_stackable_to_tau0 = sorted(tasks_stackable_to_tau0, key = lambda task: task["time"])
+        while len(tasks_stackable_to_tau0) > 1:
+            # Stack the shortest with the longest
+            tau0.append([tasks_stackable_to_tau0.pop(0), tasks_stackable_to_tau0.pop()])
+        if len(tasks_stackable_to_tau0) == 1:
+            tau1.append(tasks_stackable_to_tau0[0])
 
         # Rule 1
         task_to_tau0 = [task for task in tau1 if task["time"] < 3/4*d and task["num_proc"] > 1]
