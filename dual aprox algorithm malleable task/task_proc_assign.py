@@ -56,7 +56,10 @@ def assign_plane_pos(m, sol):
     # Assign tau_0
     first_proc, tau_0, proc_time = _consecutive_processor_assign(first_proc, tau_0, proc_time)
     # Assign tau_1
-    _, tau_1, proc_time = _consecutive_processor_assign(first_proc, tau_1, proc_time)
+    print(len(tau_1))
+    _, tau_1, proc_time = _consecutive_processor_assign(first_proc, list(map(lambda t: [t], tau_1)), proc_time)
+    tau_1 = list(map(lambda t: t[0], tau_1))
+    print(len(tau_1))
     # Assign tau_s: For 3/2-approximation it is not necessary to order decreasingly, but it works better like this
     tau_s = sorted(tau_s, key=lambda task: task["time"], reverse=True)
     for task in tau_s:

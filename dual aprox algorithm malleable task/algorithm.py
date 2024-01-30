@@ -33,14 +33,14 @@ def _refinement_rules(tau1, tau2, m, d, times):
         some_rule_exec = False
 
         # Rule 3
-        procs_per_stack_tau1 = map(lambda task_stack: max(map(itemgetter("num_proc"), task_stack)), tau1)
-        idle_proc_tau1 = m - sum(procs_per_stack_tau1)
+        idle_proc_tau1 = m - len(tau1)
         if idle_proc_tau1 == 0:
             continue
         tasks_to_idles = [task for task in tau2 if times[task["task_i"]][idle_proc_tau1-1] <= 3*d/2]
         if tasks_to_idles == []:
             continue
         some_rule_exec = True
+        print("rule 3")
         task_to_idles = tasks_to_idles[0]
         # Remove moved task from tau2
         tau2 = [task for task in tau2 if task["task_i"] != task_to_idles["task_i"]]
@@ -52,16 +52,32 @@ def _refinement_rules(tau1, tau2, m, d, times):
         if task_to_idles["time"] >= d:
             tau0.append([task_to_idles])
         else:
-            tau1.append([task_to_idles])
+            tau1.append(task_to_idles)
+        
+        # Rule 2
+        task_stackable_to_tau0 = [task for task in tau1 if task["time"] < 3/4*d and task["num_proc"] == 1]
+        n_task_stackable = len(task_stackable_to_tau0)
+        if n_task_stackable == 1:
+            continue
+        # Removed moved task from tau1
+        tau1 = [task for task in tau1 if task["time"] >= 3/4*d or task["num_proc"] > 1]
+        print("rule 2")
+        some_rule_exec = True
+        n_stack_task_pairs = n_task_stackable // 2
+        # If there is a task without pair, it would be in tau1 for the next iteration
+        if n_task_stackable % 2 == 1:
+            tau1.append(task_stackable_to_tau0[-1])
+        # Putting rest of stackable task in tau0
+        for i in range(n_stack_task_pairs):
+            tau0.append([task_stackable_to_tau0[2*i], task_stackable_to_tau0[2*i+1]])
 
         # Rule 1
-        task_to_tau0 = [task for task_stack in tau1 for task in task_stack if task["time"] < 3/4*d and task["num_proc"] > 1]
+        task_to_tau0 = [task for task in tau1 if task["time"] < 3/4*d and task["num_proc"] > 1]
         # Removed moved task from tau1
-        tau1 = [[task for task in task_stack if task["time"] >= 3/4*d or task["num_proc"] <= 1] for task_stack in tau1]
-        # Removed empty list (processors without any task)
-        tau1 = [task_stack for task_stack in tau1 if task_stack != []]
+        tau1 = [task for task in tau1 if task["time"] >= 3/4*d or task["num_proc"] <= 1]
         # Insert moved task to tau0
         for task in task_to_tau0:
+            print("rule 1")
             some_rule_exec = True
             # Assign one processor less
             task["num_proc"] = task["num_proc"] - 1
@@ -70,26 +86,6 @@ def _refinement_rules(tau1, tau2, m, d, times):
             # Add the task to tau0
             tau0.append([task])
         
-        # Rule 2
-        task_stackable_to_tau0 = [task for task_stack in tau1 for task in task_stack if task["time"] < 3/4*d and task["num_proc"] == 1]
-        # Removed moved task from tau1
-        tau1 = [[task for task in task_stack if task["time"] >= 3/4*d or task["num_proc"] > 1] for task_stack in tau1]
-        # Removed empty list (processors without any task)
-        tau1 = [task_stack for task_stack in tau1 if task_stack != []]
-        n_task_stackable = len(task_stackable_to_tau0)
-        # Insert moved task to tau0
-        if n_task_stackable > 1:
-            some_rule_exec = True
-            n_stack_task_pairs = n_task_stackable // 2
-            # If there is a task without pair, it would be in tau1 for the next iteration
-            if n_task_stackable % 2 == 1:
-                tau1.append([task_stackable_to_tau0[-1]])
-            # Putting rest of stackable task in tau0
-            for i in range(n_stack_task_pairs):
-                tau0.append([task_stackable_to_tau0[2*i], task_stackable_to_tau0[2*i+1]])
-        
-
-    
     return tau0, tau1, tau2
 
 
@@ -163,7 +159,7 @@ def _packing(times, d, m):
     if min_value > m*d - w_s:
         return False, None
     # Match each task with the #processors and time used, according to its allocation (in tau_1 or in tau_2).
-    tau_1 = [[{"task_i": index, "num_proc": task_weights_d[index], "time": times[index][task_weights_d[index] - 1]}] for index in tau_1]
+    tau_1 = [{"task_i": index, "num_proc": task_weights_d[index], "time": times[index][task_weights_d[index] - 1]} for index in tau_1]
     tau_2= [{"task_i": index, "num_proc": task_weights_d2[index], "time": times[index][task_weights_d2[index] - 1]} for index in tau_2]
     tau_0, tau_1, tau_2 = _refinement_rules(tau1 = tau_1, tau2 = tau_2, m = m, d = d, times = times)
     return True, (tau_0, tau_1, tau_2, tau_s)

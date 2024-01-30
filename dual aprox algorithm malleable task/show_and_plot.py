@@ -32,7 +32,6 @@ def draw_shelve_stacked_rects(real_makespan, d, m, sol):
     actual_yticks_labels[-1] = "makespan"
     ax.set_yticklabels(actual_yticks_labels)
     tau_0 = list(chain(*tau_0))
-    tau_1 = list(chain(*tau_1))
     n = len(tau_0) + len(tau_1) + len(tau_2) + len(tau_s)
     for t_set, color in zip([tau_0, tau_1, tau_s, tau_2], ["pink", "lightblue", "orange", "yellow"]):
         _draw_rects_set(ax = ax, task_set = t_set, color = color)
@@ -53,7 +52,7 @@ def draw_shelve_stacked_rects(real_makespan, d, m, sol):
 
     ratio_aprox = real_makespan / d
     print("d*:", d, "real makespan:", real_makespan, "ratio aprox:", ratio_aprox) 
-    plt.title(f"n = {n}, m = {m}, ratio aprox = {ratio_aprox}")
+    plt.title(f"n = {n}, m = {m}, ratio aprox = {ratio_aprox:.2f}")
     plt.xlabel("Processors")
     plt.ylabel("Time")
     plt.show()
