@@ -12,8 +12,8 @@ def _draw_rects_set(ax, task_set, color):
 
     
 
-def draw_shelve_stacked_rects(real_makespan, d, m, tau_0, tau_1, tau_2, tau_s):
-    print("d*:", d, "real makespan:", real_makespan, "ratio aprox:", real_makespan / d) 
+def draw_shelve_stacked_rects(real_makespan, d, m, sol):
+    tau_0, tau_1, tau_2, tau_s = sol
     _, ax = plt.subplots()
     # Configurar límites del eje
     ax.set_xlim(-2, m+1)
@@ -31,11 +31,11 @@ def draw_shelve_stacked_rects(real_makespan, d, m, tau_0, tau_1, tau_2, tau_s):
     actual_yticks_labels[-2] = "3d/2"
     actual_yticks_labels[-1] = "makespan"
     ax.set_yticklabels(actual_yticks_labels)
-    
-    _draw_rects_set(ax = ax, task_set = chain(*tau_0), color = "pink")
-    _draw_rects_set(ax = ax, task_set = chain(*tau_1), color = "lightblue")
-    _draw_rects_set(ax = ax, task_set = tau_s, color = "orange")
-    _draw_rects_set(ax = ax, task_set = tau_2, color = "yellow")
+    tau_0 = list(chain(*tau_0))
+    tau_1 = list(chain(*tau_1))
+    n = len(tau_0) + len(tau_1) + len(tau_2) + len(tau_s)
+    for t_set, color in zip([tau_0, tau_1, tau_s, tau_2], ["pink", "lightblue", "orange", "yellow"]):
+        _draw_rects_set(ax = ax, task_set = t_set, color = color)
 
     legend_elems = [patches.Patch(linewidth = 1, facecolor = "pink", edgecolor = 'black', label='S_0'),
                     patches.Patch(linewidth = 1, facecolor = "lightblue", edgecolor = 'black', label='S_1'),
@@ -50,7 +50,12 @@ def draw_shelve_stacked_rects(real_makespan, d, m, tau_0, tau_1, tau_2, tau_s):
         actual_xticks_labels = [label.get_text() for label in ax.get_xticklabels()]
         actual_xticks_labels[-1] = f"{m}\nm"
         ax.set_xticklabels(actual_xticks_labels)
-    
+
+    ratio_aprox = real_makespan / d
+    print("d*:", d, "real makespan:", real_makespan, "ratio aprox:", ratio_aprox) 
+    plt.title(f"n = {n}, m = {m}, ratio aprox = {ratio_aprox}")
+    plt.xlabel("Processors")
+    plt.ylabel("Time")
     plt.show()
 
 def show_algorithm_sets(best_makespan, makespan_lb, best_sol):
@@ -68,3 +73,7 @@ def show_algorithm_sets(best_makespan, makespan_lb, best_sol):
     print()
     print("ts*:")
     pprint(best_ts)
+
+def draw_ratios(n_range, ratios):
+    plt.plot(n_range, ratios)
+    plt.show()

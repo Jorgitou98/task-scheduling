@@ -49,7 +49,8 @@ def _assign_to_less_load_window(task, proc_time):
         proc_time[proc] = min_time_max_win + task["time"]
     return task, proc_time
 
-def assign_plane_pos(m, tau_0, tau_1, tau_2, tau_s):
+def assign_plane_pos(m, sol):
+    tau_0, tau_1, tau_2, tau_s = sol
     first_proc = 0
     proc_time = {i : 0 for i in range(m)}
     # Assign tau_0

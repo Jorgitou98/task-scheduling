@@ -1,18 +1,28 @@
 import random
 import numpy as np
 
-# Generate inputs for de problem
-def get_inputs():
-    # Number of task
-    n = int(input("Number of task: "))
+def get_input_sizes(num_task_test = False):
+    if num_task_test:
+        n_inf = int(input("Minimum number of task: "))
+        n_sup = int(input("Maximum number of task: "))
+        reps = int(input("Repetition of each task size: "))
+        task_sizes = (n_inf, n_sup, reps)
+    else:
+        n = int(input("Number of task: "))
+        task_sizes = n
     # Number of processors
     m = int(input("Number of processors: "))
     # Epsilon for extra approximation error
     epsilon = float(input("Epsilon: "))
 
+    return task_sizes, m, epsilon
+
+
+# Generate inputs for the problem
+def generate_tasks(n, m):
     # Time of each task using one processor
     times_one = [random.uniform(5, 1000) for _ in range(n)]
-    # Recursive an random generate decrasing times for many processor
+    # Recursive and random generate decrasing times for many processor
     def rand_multiprocess_times(last_time, p):
         if p > m:
             return []
@@ -21,5 +31,4 @@ def get_inputs():
         return [new_time] +  rand_multiprocess_times(new_time, p + 1)
     # Add time for each task with more processors (monotony property)
     times = [[time_one] + rand_multiprocess_times(time_one, 2) for time_one in times_one]
-    print("Task times: ", times)
-    return n, m, epsilon, times
+    return times
