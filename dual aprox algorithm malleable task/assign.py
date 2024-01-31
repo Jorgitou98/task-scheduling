@@ -60,17 +60,17 @@ def _makespan_bounds(m, task_set, times):
     makespan_lb /= m
     return makespan_lb, makespan_ub
 
-def _multi_layer_sched(m, limit, critical_task, proc_time, times):
+def _multi_layer_sched(m, limit, tau_2, proc_time, times):
     # Copy for change locally before assign (possibily its not a valid solution)
-    critical_task = copy.deepcopy(critical_task)
+    tau_2 = copy.deepcopy(tau_2)
     proc_time = proc_time.copy()
     s = 0
     avp = m
     min_proc_time = lambda task_t, limit: next((i + 1 for i, time in enumerate(task_t) if time <= limit), float("inf")) 
     c = 0
     i = 0
-    while i < len(critical_task):
-        task = critical_task[i]
+    while i < len(tau_2):
+        task = tau_2[i]
         proc_need = min_proc_time(times[task["task_i"]], limit)
         if proc_need <= avp:
             task["num_proc"] = proc_need
@@ -91,15 +91,15 @@ def _multi_layer_sched(m, limit, critical_task, proc_time, times):
              c, avp = 0, m
              i -= 1
         i += 1
-    return True, critical_task, proc_time
+    return True, tau_2, proc_time
 
 
               
 
-def _shorten_critical_task(m, critical_task, times, proc_time):
+def _shorten_critical_task(m, tau_2, times, proc_time):
     # Assign tau_2: For 3/2-approximation it is not necessary to order decreasingly, but it works better like this
-    critical_task = sorted(critical_task, key=lambda task: task["time"], reverse=True)
-    makespan_lb, makespan_ub = _makespan_bounds(m = m, task_set = critical_task, times = times)
+    tau_2 = sorted(tau_2, key=lambda task: task["time"], reverse=True)
+    makespan_lb, makespan_ub = _makespan_bounds(m = m, task_set = tau_2, times = times)
     makespan_space = np.arange(makespan_lb, makespan_ub + 0.02, 0.01)
     left_pos = 0
     right_pos = len(makespan_space) - 1
@@ -107,9 +107,9 @@ def _shorten_critical_task(m, critical_task, times, proc_time):
     best_proc_time = None
     while left_pos <= right_pos:
         middle_pos = (left_pos + right_pos) // 2
-        possible, critical_task_sched, proc_time_sched = _multi_layer_sched(m, makespan_space[middle_pos], critical_task, proc_time, times)
+        possible, tau_2_sched, proc_time_sched = _multi_layer_sched(m, makespan_space[middle_pos], tau_2, proc_time, times)
         if possible:
-            best_tau2 = critical_task_sched
+            best_tau2 = tau_2_sched
             best_proc_time = proc_time_sched
             right_pos = middle_pos - 1 
         else:
@@ -122,11 +122,19 @@ def assign_plane_pos(m, sol, times):
     first_proc = 0
     proc_time = {i : 0 for i in range(m)}
     # Assign tau_2
-    tau_2, proc_time = _shorten_critical_task(m, tau_s + tau_2, times, proc_time)
+    tau_2, proc_time = _shorten_critical_task(m, tau_2, times, proc_time)
+    # Assign tau_0
+    first_proc, tau_0, proc_time = _consecutive_processor_assign(first_proc, tau_0, proc_time)
     # Assign tau_1
     tau_1 = sorted(tau_1, key=lambda task: task["time"], reverse=True)
     for task in tau_1:
         task, proc_time = _assign_to_less_load_window(task, proc_time)
 
+    # Assign tau_s: For 3/2-approximation it is not necessary to order decreasingly, but it works better like this
+    tau_s = sorted(tau_s, key=lambda task: task["time"], reverse=True)
+    for task in tau_s:
+        task, proc_time = _assign_to_less_load(task, proc_time)
+        task["num_proc"] = 1
+
     real_makespan = max(proc_time.values())
-    return real_makespan, (tau_1, tau_2)
+    return real_makespan, (tau_0, tau_1, tau_2, tau_s)
