@@ -28,6 +28,7 @@ def makespan_lower_bound(times, m):
 
 def _refinement_rules(tau1, tau2, m, d, times):
     tau0 = []
+    return tau0, tau1, tau2
     some_rule_exec = True
     while some_rule_exec:
         some_rule_exec = False
@@ -53,22 +54,6 @@ def _refinement_rules(tau1, tau2, m, d, times):
             tau0.append([task_to_idles])
         else:
             tau1.append(task_to_idles)
-        
-        # Rule 2 (modified to pair the longent with the shortest tasks)
-        tasks_stackable_to_tau0 = [task for task in tau1 if task["time"] < 3/4*d and task["num_proc"] == 1]
-        n_task_stackable = len(tasks_stackable_to_tau0)
-        if n_task_stackable <= 1:
-            continue
-        some_rule_exec = True
-        # Removed moved task from tau1
-        tau1 = [task for task in tau1 if task["time"] >= 3/4*d or task["num_proc"] > 1]
-        # Increasign sort by time
-        tasks_stackable_to_tau0 = sorted(tasks_stackable_to_tau0, key = lambda task: task["time"])
-        while len(tasks_stackable_to_tau0) > 1:
-            # Stack the shortest with the longest
-            tau0.append([tasks_stackable_to_tau0.pop(0), tasks_stackable_to_tau0.pop()])
-        if len(tasks_stackable_to_tau0) == 1:
-            tau1.append(tasks_stackable_to_tau0[0])
 
         # Rule 1
         task_to_tau0 = [task for task in tau1 if task["time"] < 3/4*d and task["num_proc"] > 1]
@@ -84,7 +69,24 @@ def _refinement_rules(tau1, tau2, m, d, times):
             task["time"] = times[task["task_i"]][task["num_proc"] - 1]
             # Add the task to tau0
             tau0.append([task])
-        
+
+        # Rule 2 (modified to pair the longent with the shortest tasks)
+        tasks_stackable_to_tau0 = [task for task in tau1 if task["time"] < 3/4*d and task["num_proc"] == 1]
+        n_task_stackable = len(tasks_stackable_to_tau0)
+        if n_task_stackable <= 1:
+            continue
+        some_rule_exec = True
+        print("rule 2")
+        # Removed moved task from tau1
+        tau1 = [task for task in tau1 if task["time"] >= 3/4*d or task["num_proc"] > 1]
+        # Increasign sort by time
+        tasks_stackable_to_tau0 = sorted(tasks_stackable_to_tau0, key = lambda task: task["time"])
+        while len(tasks_stackable_to_tau0) > 1:
+            # Stack the shortest with the longest
+            tau0.append([tasks_stackable_to_tau0.pop(0), tasks_stackable_to_tau0.pop()])
+        if len(tasks_stackable_to_tau0) == 1:
+            tau1.append(tasks_stackable_to_tau0[0])
+            
     return tau0, tau1, tau2
 
 
@@ -93,7 +95,7 @@ def _refinement_rules(tau1, tau2, m, d, times):
 
 def _knapsack(item_weights, item_values, capacity):
     n = len(item_weights)
-    # best_value[i][j] = minimum value (in + out of snap) for pack i first items with capacity j.
+    # best_value[i][j] = minimum value (in + out of snap) for packing i first items with capacity j.
     # Note that best_value[0][j] = 0 for all j
     best_value = [[0 for _ in range(capacity + 1)]] + [[float("inf") for _ in range(capacity + 1)] for _ in range(n)]
     for i in range(1, n+1):
@@ -167,6 +169,8 @@ def _packing(times, d, m):
 
 # Solves de problem by bin search over the makespan space
 def dual_schedule(m, epsilon, times):
+    print("Todos al máximo:", sum(map(lambda x: x[m-1], times)))
+    print("Tiempos respecto a 1:", list(map(lambda x: x[0]/x[m-1], times)))
     # Lower bound of optimal makespan
     makespan_lb =  makespan_lower_bound(times, m)
     # Double of the lower bound is an upper bound of the optimal makespan

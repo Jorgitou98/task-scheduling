@@ -14,11 +14,13 @@ def compute_ratios(n_inf, n_sup, reps, m, epsilon):
         mean_ratio = 0
         for _ in range(reps):
             times = inp.generate_tasks(n = n, m = m)
-            best_makespan, real_makespan, sol = solve_instance(m, epsilon, times)
+            best_makespan, real_makespan, _ = solve_instance(m, epsilon, times)
             ratio = real_makespan / best_makespan
             mean_ratio += ratio
         mean_ratio /= reps
         ratios.append(mean_ratio)
+        if n > n_inf and (n - n_inf) % 20 == 0:
+            draw_ratios(n_range = range(n_inf, n+1), ratios = ratios)
     return ratios
 
 def solve_instance(m, epsilon, times):
@@ -37,11 +39,12 @@ def main():
         ratios = compute_ratios(n_inf, n_sup, reps, m, epsilon)
         draw_ratios(n_range = range(n_inf, n_sup+1), ratios = ratios)
     else:
-        n = task_sizes
-        times = inp.generate_tasks(n = n, m = m)
-        best_makespan, real_makespan, sol = solve_instance(m, epsilon, times)      
-        # Draw the solution and show some outputs
-        draw_shelve_stacked_rects(real_makespan = real_makespan, d = best_makespan, m = m, sol = sol)
+        n, reps = task_sizes
+        for _ in range(reps):
+            times = inp.generate_tasks(n = n, m = m)
+            best_makespan, real_makespan, sol = solve_instance(m, epsilon, times)      
+            # Draw the solution and show some outputs
+            draw_shelve_stacked_rects(real_makespan = real_makespan, d = best_makespan, m = m, sol = sol)
     
 
 
