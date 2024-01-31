@@ -22,12 +22,13 @@ def get_input_sizes(num_task_test = False):
 # Generate inputs for the problem
 def generate_tasks(n, m):
     # Time of each task using one processor
-    times_one = [random.uniform(5, 1000) for _ in range(n)] 
+    times_one = [random.uniform(5, 100) for _ in range(n)]
+    # times_one = [random.uniform(5, 10) for _ in range(7*n//8)] + [random.uniform(1000, 2000) for _ in range(n//8)]
     # Recursive and random generate decrasing times for many processor
     def rand_multiprocess_times(last_time, p):
         if p >= m:
             return []
-        random_factor = np.clip(random.gauss(0.75, 0.75), 0, 1)
+        random_factor = np.clip(random.gauss(0.5, 0.5), 0, 1)
         new_time = (p + random_factor) / (p + 1) * last_time
         return [new_time] +  rand_multiprocess_times(new_time, p + 1)
     # Add time for each task with more processors (monotony property)

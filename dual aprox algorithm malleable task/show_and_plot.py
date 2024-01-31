@@ -13,7 +13,7 @@ def _draw_rects_set(ax, task_set, color):
     
 
 def draw_shelve_stacked_rects(real_makespan, d, m, sol):
-    tau_0, tau_1, tau_2, tau_s = sol
+    tau_1, tau_2 = sol
     _, ax = plt.subplots()
     # Configurar límites del eje
     ax.set_xlim(-2, m+1)
@@ -31,15 +31,12 @@ def draw_shelve_stacked_rects(real_makespan, d, m, sol):
     actual_yticks_labels[-2] = "3d/2"
     actual_yticks_labels[-1] = "makespan"
     ax.set_yticklabels(actual_yticks_labels)
-    tau_0 = list(chain(*tau_0))
-    n = len(tau_0) + len(tau_1) + len(tau_2) + len(tau_s)
-    for t_set, color in zip([tau_0, tau_1, tau_s, tau_2], ["pink", "lightblue", "orange", "yellow"]):
+    n = len(tau_1) + len(tau_2)
+    for t_set, color in zip([tau_1, tau_2], ["lightblue", "yellow"]):
         _draw_rects_set(ax = ax, task_set = t_set, color = color)
 
-    legend_elems = [patches.Patch(linewidth = 1, facecolor = "pink", edgecolor = 'black', label='S_0'),
-                    patches.Patch(linewidth = 1, facecolor = "lightblue", edgecolor = 'black', label='S_1'),
-                    patches.Patch(linewidth = 1, facecolor = "yellow", edgecolor = 'black', label='S_2'),
-                   patches.Patch(linewidth = 1, facecolor = "orange", edgecolor = 'black', label='S_s')]
+    legend_elems = [patches.Patch(linewidth = 1, facecolor = "lightblue", edgecolor = 'black', label='S_1'),
+                    patches.Patch(linewidth = 1, facecolor = "yellow", edgecolor = 'black', label='S_2 U S_s')]
     ax.legend(handles = legend_elems)
 
     actual_xticks = ax.get_xticks().tolist()

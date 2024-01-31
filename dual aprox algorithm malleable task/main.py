@@ -1,7 +1,7 @@
 import inputs as inp
-from algorithm import dual_schedule
+from shelve_partition import set_partition
 from show_and_plot import draw_shelve_stacked_rects, draw_ratios
-from task_proc_assign import assign_plane_pos
+from assign import assign_plane_pos
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -25,11 +25,10 @@ def compute_ratios(n_inf, n_sup, reps, m, epsilon):
 
 def solve_instance(m, epsilon, times):
     # Call to the algorithm with problem inputs
-    best_makespan, sol = dual_schedule(m = m, epsilon = epsilon, times = times)
+    best_makespan, sol = set_partition(m = m, epsilon = epsilon, times = times)
     # Assign the tasks to specific processors and times
-    real_makespan, sol = assign_plane_pos(m, sol)   
+    real_makespan, sol = assign_plane_pos(m, sol, times)   
     return best_makespan, real_makespan, sol
-
 
 
 def main():

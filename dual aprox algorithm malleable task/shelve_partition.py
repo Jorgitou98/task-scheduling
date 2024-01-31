@@ -28,7 +28,6 @@ def makespan_lower_bound(times, m):
 
 def _refinement_rules(tau1, tau2, m, d, times):
     tau0 = []
-    return tau0, tau1, tau2
     some_rule_exec = True
     while some_rule_exec:
         some_rule_exec = False
@@ -135,7 +134,7 @@ def _knapsack(item_weights, item_values, capacity):
 
 
 # Try to pack the tasks in <= 3/2*d time using the 2-shelves approach. Return if its posible andthe solution
-def _packing(times, d, m):
+def _packing(times, d, m, rules = False):
     # Task with very small times (t(1) < d/2). They are asigned to one processor
     tau_s = [{"task_i": i, "time": task_t[0]} for i, task_t in enumerate(times) if task_t[0] < d/2]
     # Total area needed for very small tasks (sum of its times)
@@ -162,13 +161,15 @@ def _packing(times, d, m):
     # Match each task with the #processors and time used, according to its allocation (in tau_1 or in tau_2).
     tau_1 = [{"task_i": index, "num_proc": task_weights_d[index], "time": times[index][task_weights_d[index] - 1]} for index in tau_1]
     tau_2= [{"task_i": index, "num_proc": task_weights_d2[index], "time": times[index][task_weights_d2[index] - 1]} for index in tau_2]
-    tau_0, tau_1, tau_2 = _refinement_rules(tau1 = tau_1, tau2 = tau_2, m = m, d = d, times = times)
+    tau_0 = []
+    if rules:
+        tau_0, tau_1, tau_2 = _refinement_rules(tau1 = tau_1, tau2 = tau_2, m = m, d = d, times = times)
     return True, (tau_0, tau_1, tau_2, tau_s)
     
 
 
 # Solves de problem by bin search over the makespan space
-def dual_schedule(m, epsilon, times):
+def set_partition(m, epsilon, times, rules = False):
     print("Todos al máximo:", sum(map(lambda x: x[m-1], times)))
     print("Tiempos respecto a 1:", list(map(lambda x: x[0]/x[m-1], times)))
     # Lower bound of optimal makespan
@@ -186,7 +187,7 @@ def dual_schedule(m, epsilon, times):
     while left_pos <= right_pos:
         middle_pos = (left_pos + right_pos) // 2
         
-        makespan_valid, sol = _packing(times = times, d = makespan_space[middle_pos], m=m)
+        makespan_valid, sol = _packing(times = times, d = makespan_space[middle_pos], m=m, rules = rules)
         if makespan_valid:
             right_pos = middle_pos - 1
             best_sol = sol
