@@ -19,7 +19,7 @@ def compute_ratios(n_inf, n_sup, reps, m):
         mean_ratio /= reps
         ratios.append(mean_ratio)
         if n > n_inf and (n - n_inf) % 20 == 0:
-            draw_ratios(n_range = range(n_inf, n+1), ratios = ratios)
+            draw_ratios(n_range = range(n_inf, n+1), ratios = ratios, m = m)
     return ratios
 
 
@@ -28,7 +28,7 @@ def main():
     if args.num_task_test:
         n_inf, n_sup, reps = task_sizes
         ratios = compute_ratios(n_inf, n_sup, reps, m)
-        draw_ratios(n_range = range(n_inf, n_sup+1), ratios = ratios)
+        draw_ratios(n_range = range(n_inf, n_sup+1), ratios = ratios, m = m)
     else:
         n, reps = task_sizes
         for _ in range(reps):

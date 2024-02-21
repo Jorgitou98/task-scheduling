@@ -51,6 +51,9 @@ def draw_shelve_stacked_rects(real_makespan, d, m, lm_loc, hm_loc):
     plt.ylabel("Time")
     plt.show()
 
-def draw_ratios(n_range, ratios):
+def draw_ratios(n_range, ratios, m):
     plt.plot(n_range, ratios)
+    plt.title(f"OB algorithm m={m}")
+    plt.xlabel("n (number of task)")
+    plt.ylabel("Ratio (respect lb of optimal makespan)")
     plt.show()

@@ -27,17 +27,15 @@ def _makespan_lower_bound(times, m):
     return lb_makespan_opt
 
 def schedule(times, m):
-    times = sorted(times, key=lambda task: task[0], reverse=False)
+    times = sorted(times, key=lambda task: task[0], reverse=True)
     makespan_lb = _makespan_lower_bound(times, m)
     n = len(times)
     makespan = float("inf")
     lm_loc_sol, hm_loc_sol = None, None
     for k in range(n, -1, -1):
-        times_lm = times[:k]
-        times_hm = times[k:]
-        real_makespan, lm_loc, hm_loc = assign_plane_pos(m, times_lm, times_hm)
-        print("k:", k)
-        #draw_shelve_stacked_rects(real_makespan, makespan_lb, m, lm_loc, hm_loc)
+        times_lm = times[k:]
+        times_hm = times[:k]
+        real_makespan, lm_loc, hm_loc = assign_plane_pos(makespan_lb, m, times_lm, times_hm)
         if real_makespan < makespan:
             makespan = real_makespan
             lm_loc_sol, hm_loc_sol = lm_loc, hm_loc

@@ -73,6 +73,9 @@ def show_algorithm_sets(best_makespan, makespan_lb, best_sol):
     print("ts*:")
     pprint(best_ts)
 
-def draw_ratios(n_range, ratios):
+def draw_ratios(n_range, ratios, m):
     plt.plot(n_range, ratios)
+    plt.title(f"2-shelve algorithm m={m}")
+    plt.xlabel("n (number of task)")
+    plt.ylabel("Ratio (respect lb of optimal makespan)")
     plt.show()

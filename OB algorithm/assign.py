@@ -41,12 +41,13 @@ def _improve_critical_task(lm_loc, times_lm, proc_time):
     if lm_loc == []:
          return
     task_i, critical_task = max(enumerate(lm_loc), key=lambda task: task[1]["end_time"])
+    if critical_task["num_proc"] == len(proc_time):
+        return 
     curr_makespan = critical_task["end_time"]
-
     # Remove task from previous place
     for proc in range(critical_task["x"], critical_task["x"] + critical_task["num_proc"]):
         proc_time[proc].pop()
-    
+
     # Calculate best position for one more processor
     win_max_times = _max_sliding_window(proc_time, critical_task["num_proc"] + 1)
     min_time_max_win = min(win_max_times)
@@ -58,7 +59,6 @@ def _improve_critical_task(lm_loc, times_lm, proc_time):
         for proc in range(critical_task["x"], critical_task["x"] + critical_task["num_proc"]):
             proc_time[proc].append(curr_makespan)
             return
-    print("Improving")
     critical_task["num_proc"] += 1
     critical_task["time"] = times_lm[task_i][critical_task["num_proc"] - 1]
     
@@ -121,10 +121,18 @@ def _assign_hm(m, times_hm, proc_time):
             right_pos = middle_pos - 1 
         else:
             left_pos = middle_pos + 1
+    if hm_loc is None:
+        best_proc_time, hm_loc, heigh = proc_time, [], 0
+        for task_t in times_hm:
+            hm_loc.append({"num_proc": m, "x": 0, "y": heigh, "time": task_t[m-1], "end_time": heigh + task_t[m-1]})
+            heigh += task_t[m-1]
+            for proc in best_proc_time:
+                best_proc_time[proc].append(heigh)
+         
     return hm_loc, best_proc_time
               
 
-def assign_plane_pos(m, times_lm, times_hm):
+def assign_plane_pos(makespan_lb, m, times_lm, times_hm):
     # Momentaneo. Pensar como hacer para no tener esta estructura O(n*m). Ayuda en el método _improve_critical_task
     proc_time = {i : [0] for i in range(m)}
     hm_loc, proc_time = _assign_hm(m, times_hm, proc_time)
