@@ -1,26 +1,22 @@
-
-from algorithm import create_allotments_family
+from plotting import draw_rects
+from algorithm import *
 from inputs import generate_tasks
-from pprint import pprint
 import random
 
 
 def main():
-    n, times, instance_sizes = generate_tasks()
+    device, times, instance_sizes = generate_tasks()
+    n_slices = instance_sizes[-1]
     random.shuffle(times)
-    create_allotments_family(times, instance_sizes)
-    # print("Times GPC superlinear:")
-    # pprint(times_GPC_superlinear)
-    # print()
-    # print("Times GPC linear:")
-    # pprint(times_GPC_linear)
-    # print()
-    # print("Times GPC sublinear:")
-    # pprint(times_GPC_sublinear)
-    # times = times_GPC_superlinear + times_GPC_linear + times_GPC_sublinear
-    # random.shuffle(times)
-    # pprint(times_GPC_superlinear)
-    # create_allotments_family(times_GPC_superlinear)
+
+    allotmets_family = create_allotments_family(times, n_slices)
+    lb_makespane_opt = lower_bound_makespan_opt(allotmets_family, n_slices)
+    _, scheduling_algorithm = moldable_scheduler(n_slices, allotmets_family)
+
+    scheduling_no_dynamic = no_dynamic_reconfig(device, times)
+    draw_rects(n_slices, scheduling_no_dynamic, lb_makespane_opt)
+    draw_rects(n_slices, scheduling_algorithm, lb_makespane_opt)
+    
 
 
 if __name__ == "__main__":

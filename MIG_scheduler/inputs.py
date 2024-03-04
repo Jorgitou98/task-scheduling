@@ -32,8 +32,8 @@ def generate_tasks():
                 # Escala mal
                 if size > scale_size:
                     next_time = (size - 1 + np.clip(np.random.normal(0.75, 0.25), 0.5, 1)) / size * last_time
-                # Si sigue siendo memory bound y hemos escalado en memoria (de 3 a 4 slices no se escala)
-                elif super_linear_grow and size != 4:
+                # Si sigue siendo memory bound y hemos escalado en memoria (de 3 a 4 slices no se escala en A100)
+                elif super_linear_grow and device == "A100" and size != 4:
                     next_time = (size - 1 + np.clip(np.random.normal(-0.25, 0.25), -0.5, 0)) / size * last_time
                     if random.random() <= 0.7:
                         super_linear_grow = False
@@ -45,11 +45,4 @@ def generate_tasks():
         # Remove times of isntance sizes not valid
         times = [[(slices, time) for slices, time in task_times if slices in instance_sizes] for task_times in times]
         pprint(times)
-    return n, times, instance_sizes
-        
-
-    
-
-
-    
-
+    return device, times, instance_sizes
