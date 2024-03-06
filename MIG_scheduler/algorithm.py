@@ -19,8 +19,8 @@ def create_allotments_family(times, n_slices):
         more_slices_task = [(slices, time) for slices, time in times[index_max_time] if slices > num_slices]
         allotment_curr[index_max_time] = min(more_slices_task, key=work)
         allotmets_family.append(allotment_curr)
-    print("\n\nAllotments family\n\n")
-    pprint(allotmets_family)
+    # print("\n\nAllotments family\n\n")
+    # pprint(allotmets_family)
     return allotmets_family
 
 class Task:
@@ -94,10 +94,10 @@ def lower_bound_makespan_opt(allotmets_family, n_slices):
 
 def moldable_scheduler(n_slices, allotmets_family):
     schedulings = [tasks_scheduling(n_slices, allotment) for allotment in allotmets_family]
-    for scheduling in schedulings:
-        print("Scheduling")
-        print(scheduling)
-        #draw_rects(n_slices, scheduling, lb_makespane_opt)
+    # for scheduling in schedulings:
+    #     print("Scheduling")
+    #     print(scheduling)
+    #     #draw_rects(n_slices, scheduling, lb_makespane_opt)
     makespan, scheduling_algorithm = min(((give_makespan(scheduling), scheduling) for scheduling in schedulings), key=lambda x: x[0])
     return makespan, scheduling_algorithm
 
@@ -128,44 +128,75 @@ def _select_partition(times, partitions):
             if speed > best_speed_partition:
                 best_speed_partition = speed
                 task_partition_order = task_times
-        print(partition, best_speed_partition)
+        #print(partition, best_speed_partition)
         if best_speed_partition > best_speed:
             best_speed = best_speed_partition
             best_partition = partition
             best_order = task_partition_order
     return best_partition, best_order
 
+partitions_A30 = [[4], [2,2], [2,1,1], [1,1,2], [1,1,1,1]]
+partitions_A100 = [[7], [4,3], [4,2,1], [4,1,1,1],\
+                    [3,3], [3,2,1], [3,1,1,1],\
+                    [2,2,3],[2,2,2,1], [2,2,1,1,1],\
+                    [2,1,1,3],[2,1,1,2,1], [2,1,1,1,1,1],\
+                    [1,1,2,3],[1,1,2,2,1], [1,1,2,1,1,1],\
+                    [1,1,1,1,3],[1,1,1,1,2,1], [1,1,1,1,1,1,1]]
+
 def no_dynamic_reconfig(device, times):
     scheduling = []
-    partitions_A30 = [[4], [2,2], [2,1,1], [1,1,2], [1,1,1,1]]
-    partitions_A100 = [[7], [4,3], [4,2,1], [4,1,1,1],\
-                       [3,3], [3,2,1], [3,1,1,1],\
-                       [2,2,3],[2,2,2,1], [2,2,1,1,1],\
-                       [2,1,1,3],[2,1,1,2,1], [2,1,1,1,1,1],\
-                       [1,1,2,3],[1,1,2,2,1], [1,1,2,1,1,1],\
-                       [1,1,1,1,3],[1,1,1,1,2,1], [1,1,1,1,1,1,1]]
     partitions = partitions_A100 if device == "A100" else partitions_A30
-    start_time = 0
+    num_slices = 4 if device == "A30" else 7
+    start_times = [0 for slice in range(num_slices)]
     while times != []:
         best_partition, best_order = _select_partition(times, partitions)
         first_slice = 0
-        next_start_time = start_time
-
         for task_times, instance_size in zip(best_order, best_partition):
             time = next((time for slices, time in task_times if slices == instance_size), None)
             slices = 4 if first_slice == 0 and instance_size == 3 else instance_size
+            next_start_time = max(start_times[first_slice:first_slice+slices])
             scheduling.append(Task(first_slice=first_slice, slices=slices, slices_used=instance_size,\
-                                   start_time=start_time, time=time))
+                                   start_time=next_start_time, time=time))
+            for slice in range(first_slice, first_slice+slices):
+                start_times[slice] = next_start_time + time
             first_slice += slices
-            next_start_time = max(next_start_time, start_time + time)
 
-        start_time = next_start_time
         times = times[len(best_partition):]
-        
-
     return scheduling
 
-    
+
+def fifo_fixed(device, times):
+    partitions = partitions_A100 if device == "A100" else partitions_A30
+    best_scheduling = None
+    best_makespan = float("inf")
+    for partition in partitions:
+        scheduling_partition = []
+        pq = []
+        first_slice = 0
+        for instance_size in partition:
+            reserved_slices = instance_size
+            if instance_size == 3 and partition[-1] != 3:
+                reserved_slices = 4
+            heapq.heappush(pq, Task(first_slice=first_slice, slices=reserved_slices, slices_used=instance_size,\
+                                start_time=0, time=0))
+            first_slice += reserved_slices
+        for task_times in times:
+            task_finish = heapq.heappop(pq)
+            if task_finish.time > 0:
+                scheduling_partition.append(task_finish)
+            next_time = next((time for slices, time in task_times if slices == task_finish.slices_used), None)
+            heapq.heappush(pq, Task(first_slice=task_finish.first_slice, slices=task_finish.slices, slices_used=task_finish.slices_used,\
+                                start_time=task_finish.start_time + task_finish.time, time=next_time))
+        while pq:
+            task_finish = heapq.heappop(pq)
+            if task_finish.time > 0:
+                scheduling_partition.append(task_finish)
+        makespan_partition = give_makespan(scheduling_partition)
+        if makespan_partition < best_makespan:
+            best_makespan = makespan_partition
+            best_scheduling = scheduling_partition
+    return best_scheduling
+        
 
 
         
